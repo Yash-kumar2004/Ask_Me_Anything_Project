@@ -60,14 +60,21 @@ export async function POST(request: Request) {
       });
 
       await newUser.save();
+      console.log(newUser);
+      
     }
 
     // Send verification email
+    console.log("sending verifiicaton email");
+    
     const emailResponse = await sendVerificationEmail(
       email,
       username,
       verifyCode
     );
+
+    console.log(emailResponse);
+    
     if (!emailResponse.success) {
       return Response.json(
         {
