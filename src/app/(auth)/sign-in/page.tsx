@@ -1,20 +1,54 @@
-'use client'
-import { useSession, signIn, signOut } from "next-auth/react"
+import React, { useEffect, useState } from 'react'
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as  z  from "zod"
+import Link from 'next/link'
+import { useDebounceValue } from 'usehooks-ts'
+import { useRouter } from 'next/router'
+import { signInSchema } from '@/Schemas/signInSchema'
+import axios, { AxiosError } from 'axios'
+import { ApiResponse } from '@/types/ApiResponse'
+function page() {
+  const [username,setUsername]=useState('')
+  const [usernameMessage,setUsernameMessage]=useState('');
+  const [isCheckingUsername,setIsCheckingUsername]=useState(false)
+  const [isSubmitting,setIsSubmitting]=useState(false);
+  const debouncedUsername=useDebounceValue(username,300);
 
-export default function Component() {
-  const { data: session } = useSession()
-  if (session) {
-    return (
-      <>
-        Signed in as {session.user.email} <br />
-        <button onClick={() => signOut()}>Sign out</button>
-      </>
-    )
-  }
+  const router=useRouter()
+
+  const form = useForm<z.infer<typeof signInSchema>>({
+    resolver: zodResolver(signInSchema),
+    defaultValues: {
+      identifier: '',
+      password: '',
+    },
+  });
+
+  useEffect(()=>{ 
+    const checkUserNameUnique=async ()=>{
+      setIsCheckingUsername(true);
+      setUsernameMessage('');
+      try {
+        const response=await axios.get(`/api/check-username-unique?username=${debouncedUsername}`)
+        setUsernameMessage(response.data.message)
+      } catch (error) {
+        const axiosError=error as AxiosError<ApiResponse>
+        setUsernameMessage(
+          axiosError.response?.data.message ?? "Error checking userName"
+        )
+      }
+      finally{
+        setIsCheckingUsername(false)
+      }
+    }
+  },[debouncedUsername])
+
   return (
-    <>
-      Not signed in <br />
-      <button className="bg-orange-400 rounded-3xl px-4 py-3 " onClick={() => signIn()}>Sign in</button>
-    </>
+    <div>
+      
+    </div>
   )
 }
+
+export default page
