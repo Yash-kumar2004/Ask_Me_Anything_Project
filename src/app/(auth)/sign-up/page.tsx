@@ -1,10 +1,11 @@
+'use client'
 import React, { useEffect, useState } from 'react'
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as  z  from "zod"
 import Link from 'next/link'
-import { useDebounceValue } from 'usehooks-ts'
-import { useRouter } from 'next/router'
+import { useDebounceCallback } from 'usehooks-ts'
+import { useRouter } from 'next/navigation'
 import { signUpSchema } from '@/Schemas/signUpSchema'
 import axios, { AxiosError } from 'axios'
 import { ApiResponse } from '@/types/ApiResponse'
@@ -24,11 +25,18 @@ import {Loader2} from 'lucide-react'
 
 
 function SignUpForm() {
-  const [username,setUsername]=useState('')
+  // const [username,setUsername]=useState('')
   const [usernameMessage,setUsernameMessage]=useState('');
   const [isCheckingUsername,setIsCheckingUsername]=useState(false)
   const [isSubmitting,setIsSubmitting]=useState(false);
-  const debouncedUsername=useDebounceValue(username,300);
+  const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+      setIsClient(true);
+    }, []);
+
+  
+  // const debounced=useDebounceCallback(setUsername,300);
 
   const router=useRouter()
 
@@ -41,24 +49,44 @@ function SignUpForm() {
     },
   });
 
-  useEffect(()=>{ 
-    const checkUserNameUnique=async ()=>{
-      setIsCheckingUsername(true);
-      setUsernameMessage('');
-      try {
-        const response=await axios.get(`/api/check-username-unique?username=${debouncedUsername}`)
-        setUsernameMessage(response.data.message)
-      } catch (error) {
-        const axiosError=error as AxiosError<ApiResponse>
-        setUsernameMessage(
-          axiosError.response?.data.message ?? "Error checking userName"
-        )
-      }
-      finally{
-        setIsCheckingUsername(false)
-      }
-    }
-  },[debouncedUsername])
+  const checkUsernameUnique = useDebounceCallback(async (value: string) => {
+  if (!value) return;
+
+  setIsCheckingUsername(true);
+  setUsernameMessage('');
+  try {
+    const response = await axios.get(`/api/check-username-unique?username=${value}`);
+    setUsernameMessage(response.data.message);
+  } catch (error) {
+    const axiosError = error as AxiosError<ApiResponse>;
+    setUsernameMessage(
+      axiosError.response?.data.message ?? "Error checking username"
+    );
+  } finally {
+    setIsCheckingUsername(false);
+  }
+}, 300);
+
+  // useEffect(()=>{ 
+  //   const checkUserNameUnique=async ()=>{
+  //     if(username){
+  //     setIsCheckingUsername(true);
+  //     setUsernameMessage('');
+  //     try {
+  //       const response=await axios.get(`/api/check-username-unique?username=${username}`)
+  //       setUsernameMessage(response.data.message)
+  //     } catch (error) {
+  //       const axiosError=error as AxiosError<ApiResponse>
+  //       setUsernameMessage(
+  //         axiosError.response?.data.message ?? "Error checking userName"
+  //       )
+  //     }
+  //     finally{
+  //       setIsCheckingUsername(false)
+  //     }
+  //   }
+  // }
+  // },[username])
 
 
   const onSubmit = async (data: z.infer<typeof signUpSchema>) => {
@@ -69,7 +97,8 @@ function SignUpForm() {
       toast.success(response.data.message);
 
 
-      router.replace(`/verify/${username}`);
+      router.replace(`/verify/${form.getValues("username")}`);
+
 
       setIsSubmitting(false);
     } catch (error) {
@@ -110,12 +139,13 @@ function SignUpForm() {
                     {...field}
                     onChange={(e:any) => {
                       field.onChange(e);
-                      setUsername(e.target.value);
+                      checkUsernameUnique(e.target.value);
                     }}
                   />
                   {isCheckingUsername && <Loader2 className="animate-spin" />}
-                  {!isCheckingUsername && usernameMessage && (
+                  {isClient && !isCheckingUsername && usernameMessage && (
                     <p
+                      
                       className={`text-sm ${
                         usernameMessage === 'Username is unique'
                           ? 'text-green-500'
@@ -129,6 +159,7 @@ function SignUpForm() {
                 </FormItem>
               )}
             />
+            
             <FormField
               name="email"
               control={form.control}
