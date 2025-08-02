@@ -29,7 +29,7 @@ function SignUpForm() {
   const [usernameMessage,setUsernameMessage]=useState('');
   const [isCheckingUsername,setIsCheckingUsername]=useState(false)
   const [isSubmitting,setIsSubmitting]=useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const [isClient, setIsClient] = useState(false);  // to resolve error 
 
     useEffect(() => {
       setIsClient(true);
