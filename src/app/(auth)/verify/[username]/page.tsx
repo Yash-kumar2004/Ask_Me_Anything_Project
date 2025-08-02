@@ -18,25 +18,28 @@ import { useParams, useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { verifySchema } from '@/Schemas/verifySchema';
+import { useState } from 'react';
+import { Loader2 } from 'lucide-react';
 
 export default function VerifyAccount() {
   const router = useRouter();
   const params = useParams<{ username: string }>();
-  
+  const [isSubmitting,setIsSubmitting]=useState(false);
   const form = useForm<z.infer<typeof verifySchema>>({
     resolver: zodResolver(verifySchema),
   });
 
   const onSubmit = async (data: z.infer<typeof verifySchema>) => {
     try {
+      setIsSubmitting(true);
       const response = await axios.post<ApiResponse>(`/api/verify-code`, {
         username: params.username,
         code: data.code,
       });
 
       toast.success(response.data.message);
-
       router.replace('/sign-in');
+      setIsSubmitting(false);
     } catch (error) {
       const axiosError = error as AxiosError<ApiResponse>;
       let errorMessage = axiosError.response?.data.message;
@@ -49,7 +52,7 @@ export default function VerifyAccount() {
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-xl/30 border-2">
         <div className="text-center">
           <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl mb-6">
             Verify Your Account
@@ -71,7 +74,14 @@ export default function VerifyAccount() {
                 </FormItem>
               )}
             />
-            <Button type="submit">Verify</Button>
+            <Button type="submit">{isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Please wait
+                    </>
+                  ) : (
+                    'Verify'
+                  )}</Button>
           </form>
         </Form>
       </div>
