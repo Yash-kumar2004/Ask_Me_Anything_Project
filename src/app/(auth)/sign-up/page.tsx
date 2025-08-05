@@ -120,7 +120,7 @@ function SignUpForm() {
   return (
     <div>
           <div className="flex justify-center items-center min-h-screen bg-white">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-xl/30 border-2">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-xl/30 border-b-4">
         <div className="text-center">
           <h1 className="text-4xl font-extrabold tracking-tight lg:text-5xl mb-6">
             Join Ask Me Anything !
@@ -136,6 +136,7 @@ function SignUpForm() {
                 <FormItem>
                   <FormLabel>Username</FormLabel>
                   <Input
+                  className='border-2'
                     {...field}
                     onChange={(e:any) => {
                       field.onChange(e);
@@ -166,7 +167,7 @@ function SignUpForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Email</FormLabel>
-                  <Input {...field} name="email" />
+                  <Input className='border-2' {...field} name="email" />
                   <p className=' text-gray-400 text-sm'>We will send you a verification code</p>
                   <FormMessage />
                 </FormItem>
@@ -179,7 +180,7 @@ function SignUpForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Password</FormLabel>
-                  <Input type="password" {...field} name="password" />
+                  <Input className='border-2' type="password" {...field} name="password" />
                   <FormMessage />
                 </FormItem>
               )}

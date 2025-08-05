@@ -39,7 +39,10 @@ function UserDashboard() {
     setIsSwitchLoading(true);
     try {
       const response = await axios.get<ApiResponse>('/api/accept-messages');
-      setValue('acceptMessages', response.data.isAcceptingMessages);
+      // setValue('acceptMessages', response.data.isAcceptingMessages);
+      if (typeof response.data.isAcceptingMessages === 'boolean') {
+          setValue('acceptMessages', response.data.isAcceptingMessages);
+      }
     } catch (error) {
       const axiosError = error as AxiosError<ApiResponse>;
       toast.error(axiosError.response?.data.message ??
@@ -57,19 +60,11 @@ function UserDashboard() {
         const response = await axios.get<ApiResponse>('/api/get-messages');
         setMessages(response.data.messages || []);
         if (refresh) {
-          toast({
-            title: 'Refreshed Messages',
-            description: 'Showing latest messages',
-          });
+          toast.success("Showing latest messages");
         }
       } catch (error) {
         const axiosError = error as AxiosError<ApiResponse>;
-        toast({
-          title: 'Error',
-          description:
-            axiosError.response?.data.message ?? 'Failed to fetch messages',
-          variant: 'destructive',
-        });
+        toast.error(axiosError.response?.data.message ?? 'Failed to fetch messages');
       } finally {
         setIsLoading(false);
         setIsSwitchLoading(false);
@@ -94,19 +89,12 @@ function UserDashboard() {
         acceptMessages: !acceptMessages,
       });
       setValue('acceptMessages', !acceptMessages);
-      toast({
-        title: response.data.message,
-        variant: 'default',
-      });
+
+      toast.success(response.data.message)
     } catch (error) {
       const axiosError = error as AxiosError<ApiResponse>;
-      toast({
-        title: 'Error',
-        description:
-          axiosError.response?.data.message ??
-          'Failed to update message settings',
-        variant: 'destructive',
-      });
+      toast.error(axiosError.response?.data.message ??
+          'Failed to update message settings')
     }
   };
 
@@ -121,10 +109,8 @@ function UserDashboard() {
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(profileUrl);
-    toast({
-      title: 'URL Copied!',
-      description: 'Profile URL has been copied to clipboard.',
-    });
+    
+    toast.success('Profile URL has been copied to clipboard.')
   };
 
   return (
@@ -175,7 +161,7 @@ function UserDashboard() {
         {messages.length > 0 ? (
           messages.map((message, index) => (
             <MessageCard
-              key={message._id}
+              key={message._id as string}
               message={message}
               onMessageDelete={handleDeleteMessage}
             />

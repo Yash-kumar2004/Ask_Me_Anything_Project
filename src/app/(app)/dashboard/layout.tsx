@@ -17,7 +17,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
     <html lang="en" >
     
         <body className={inter.className}>
-             <Navbar/>
+
           {children}
         </body>
     </html>

@@ -80,7 +80,7 @@ export default function SignInForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Email/Username</FormLabel>
-                  <Input {...field} />
+                  <Input className='border-2' {...field} />
                   <FormMessage />
                 </FormItem>
               )}
@@ -91,7 +91,7 @@ export default function SignInForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Password</FormLabel>
-                  <Input type="password" {...field} />
+                  <Input className='border-2' type="password" {...field} />
                   <FormMessage />
                 </FormItem>
               )}
