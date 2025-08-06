@@ -1,28 +1,41 @@
 // src/app/api/suggest-messages/route.ts
-
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-export const runtime = 'edge'; // For better streaming
+export const runtime = 'edge';
 
 export async function POST(req: Request) {
   try {
     const prompt = `
-Create a fresh and original list of three open-ended, engaging, and unique questions formatted as a single string. Ensure these are different from typical questions, and avoid repeating commonly used ones. Separate each with '||'. These questions are for an anonymous social messaging platform and should spark fun and inclusive conversations. Example output: 'What’s a hobby you’ve recently started?||If you could have dinner with any historical figure, who would it be?||What’s a simple thing that makes you happy?'
+Create a fresh and original list of three open-ended, engaging, and unique questions formatted as a single string. Ensure these are different from typical questions, and avoid repeating commonly used ones. Separate each with '||'. These questions are for an anonymous social messaging platform and should spark fun and inclusive conversations. Example output: 'What's a hobby you've recently started?||If you could have dinner with any historical figure, who would it be?||What's a simple thing that makes you happy?'
     `;
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
 
-    const result = await model.generateContentStream([prompt]);
+    // Use generateContent instead of generateContentStream for more reliable parsing
+    const result = await model.generateContent([prompt]);
+    const response = await result.response;
+    const text = response.text();
 
+    // If you want to keep streaming, create a simple stream from the complete text
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
-      async start(controller) {
-        for await (const chunk of result.stream) {
-          const text = chunk.text();
-          controller.enqueue(encoder.encode(text));
-        }
-        controller.close();
+      start(controller) {
+        // Simulate streaming by sending the text in chunks
+        const chunks = text.match(/.{1,10}/g) || [text];
+        let index = 0;
+        
+        const sendChunk = () => {
+          if (index < chunks.length) {
+            controller.enqueue(encoder.encode(chunks[index]));
+            index++;
+            setTimeout(sendChunk, 50); // Small delay between chunks
+          } else {
+            controller.close();
+          }
+        };
+        
+        sendChunk();
       },
     });
 
@@ -32,16 +45,18 @@ Create a fresh and original list of three open-ended, engaging, and unique quest
       },
     });
   } catch (err) {
-    console.error("Error in Gemini streaming API:", err);
-    return new Response("Internal Server Error", { status: 500 });
+    console.error("Error in Gemini API:", err);
+    
+    // Return a fallback response with default messages
+    const fallbackMessages = "What's something new you learned recently?||If you could travel anywhere tomorrow, where would you go?||What's a small act of kindness you remember?";
+    
+    return new Response(fallbackMessages, {
+      headers: {
+        "Content-Type": "text/plain; charset=utf-8",
+      },
+    });
   }
 }
-
-
-
-
-
-
 
 
 
